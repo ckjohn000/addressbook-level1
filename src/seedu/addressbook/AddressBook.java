@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.*;
 
 /*
  * NOTE : =============================================================
@@ -120,6 +121,12 @@ public class AddressBook {
                                                     + "the last find/list call.";
     private static final String COMMAND_DELETE_PARAMETER = "INDEX";
     private static final String COMMAND_DELETE_EXAMPLE = COMMAND_DELETE_WORD + " 1";
+
+    private static final String COMMAND_EDIT_WORD = "edit";
+    private static final String COMMAND_EDIT_DESC = "Edit person properties in list";
+    private static final String COMMAND_EDIT_PARAMATERS = "KEYWORD [MORE KEYWORDS]";
+    private static final String COMMAND_EDIT_PARAMETERS = "NAME " + PERSON_DATA_PREFIX_PHONE +
+            "PHONE_NUMBER " + PERSON_DATA_PREFIX_EMAIL + "EMAIL";
 
     private static final String COMMAND_CLEAR_WORD = "clear";
     private static final String COMMAND_CLEAR_DESC = "Clears address book permanently.";
@@ -373,6 +380,8 @@ public class AddressBook {
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
             return executeFindPersons(commandArgs);
+        case COMMAND_EDIT_WORD:
+            return executeEditPerson(commandArgs);
         case COMMAND_LIST_WORD:
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
@@ -443,6 +452,24 @@ public class AddressBook {
     }
 
     /**
+     * Constructs a feedback message for a successful edit command execution.
+     *
+     * @see #executeEditPerson(String)
+     * @param editedPerson person who was successfully added
+     * @return successful edit person feedback message
+     */
+    private static String getMessageForSuccessfulEditedPerson(String[] editedPerson) {
+        return String.format(MESSAGE_ADDED, getNameFromPerson(editedPerson), getPhoneFromPerson(editedPerson),
+                getEmailFromPerson(editedPerson));
+    }
+
+
+
+
+
+
+
+    /**
      * Finds and lists all persons in address book whose name contains any of the argument keywords.
      * Keyword matching is case sensitive.
      *
@@ -511,6 +538,30 @@ public class AddressBook {
         return deletePersonFromAddressBook(targetInModel) ? getMessageForSuccessfulDelete(targetInModel) // success
                                                           : MESSAGE_PERSON_NOT_IN_ADDRESSBOOK; // not found
     }
+
+    /**
+     * Edits a person's properties (specified by the command args) to the address book.
+     * The entire command arguments string is treated as a string representation of the person to edit.
+     *
+     * @param commandArgs full command args string from the user
+     * @return feedback display message for the operation result
+     */
+    private static String executeEditPerson(String commandArgs) {
+        // try decoding a person from the raw args
+        final Optional<String[]> decodeResult = decodePersonFromString(commandArgs);
+
+        // checks if args are valid (decde result will not be present if the person is invalid)
+        if(!decodeResult.isPresent()) {
+            return getMessageForInvalidCommandInput(COMMAND_EDIT_WORD, getUsageInfoForAddCommand());
+        }
+
+        // add the person as specified
+        final String[] personToEdit = decodeResult.get();
+        addPersonToAddressBook(personToEdit);
+        return getMessageForSuccessfulEditedPerson(personToEdit);
+    }
+
+
 
     /**
      * Checks validity of delete person argument string's format.
@@ -1097,6 +1148,16 @@ public class AddressBook {
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_ADD_PARAMETERS) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_ADD_EXAMPLE) + LS;
     }
+
+    /** Returns the string for showing 'edit' command usage instruction */
+    private static String getUsageInfoForEditCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_EDIT_WORD, COMMAND_EDIT_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_EDIT_PARAMATERS) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE) + LS;
+    }
+
+
+
 
     /** Returns the string for showing 'find' command usage instruction */
     private static String getUsageInfoForFindCommand() {
